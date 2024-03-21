@@ -62,20 +62,19 @@ def schoolAIConversation():
     sleep(7)
 
     while len(conversation) < MAX_MESSAGES:
-        sleep(3)
-
         msg_bot = getSchoolAIResponse(driver)
         conversation.append(msg_bot)
         msg_persona = getMaihemResponse(MAIHEM_TEST_ID, "test_run_1", 0, msg_bot)
         send_message_to_schoolai(driver, msg_persona)
- 
+        
         if msg_persona == "Maximum number of conversation turns reached":
             print("CONVERSATION COMPLETED: MAIHEM LIMIT REACHED")
             break
-
         if msg_bot == "END" or "The conversation has ended" in msg_bot:
             print("CONVERSATION COMPLETED: SCHOOLAI LIMIT REACHED")
             break
+
+        sleep(3)
 
     driver.quit()
     return conversation
