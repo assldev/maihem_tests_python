@@ -7,14 +7,25 @@ from time import sleep
 from datetime import datetime
 
 os.environ['MAIHEM_API_KEY'] = 'maihem-20240320-cANx30AceO^LclbykXht78W7b3l{5n01'
-MAIHEM_MAX_MESSAGES = 20
+MAIHEM_MAX_MESSAGES = 25
 
-MAIHEM_TEST_NAME = "Education Bot Test - SchoolAI"
+MAIHEM_TEST_NAME = "Education Bot Test (3 Personas) - SchoolAI"
 MAIHEM_TEST_CHATBOT_ROLE = "education tutor"
 MAIHEM_TEST_INDUSTRY = "Education"
-MAIHEM_TEST_PERSONAS_COUNT = 5
+MAIHEM_TEST_PERSONAS_COUNT = 3
 MAIHEM_TEST_TOPIC = "Secondary school"
 MAIHEM_TEST_LANGUAGE = "English"
+MAIHEM_TEST_METRICS_CHATBOT = {
+    "Empathy": "The chatbot was able to understand and empathize with the persona's feelings",
+    "Politeness": "The chatbot used polite language and tone to communicate with the persona",
+    "On topic": "The chatbot stayed on topic and anwered the persona's request",
+    "Correct language": "The response of the chatbot was in the correct language"
+}
+MAIHEM_TEST_METRICS_PERSONA = {
+    "Mood improvement": "The persona's mood improved",
+    "Goal completion": "The goal of the persona was achieved",
+    "Frustration avoidance": "The persona was not fustrated",
+}
 
 def initialize_maihem_test():
     maihem.create_test(
@@ -24,12 +35,13 @@ def initialize_maihem_test():
         n=MAIHEM_TEST_PERSONAS_COUNT,
         topic=MAIHEM_TEST_TOPIC,
         language=MAIHEM_TEST_LANGUAGE
-    ) 
+    )
+    print(f"NEW MAIHEM TEST PROFILE CREATED: {MAIHEM_TEST_NAME}")
 
-def getMaihemResponse(persona_id, message):
+def getMaihemResponse(test_run_name, persona_id, message):
     msg = maihem.chat_with_persona(
         test_name=MAIHEM_TEST_NAME, 
-        test_run_name=MAIHEM_TEST_RUN_NAME, 
+        test_run_name=test_run_name, 
         persona_id=persona_id,
         message=message
     )
@@ -38,6 +50,14 @@ def getMaihemResponse(persona_id, message):
 
 def remove_non_bmp_chars(text):
   return ''.join(c for c in text if ord(c) <= 0xFFFF)
+
+def evaluate_results(test_run_name):
+    df_eval = maihem.evaluate(
+        test_name=MAIHEM_TEST_NAME, 
+        test_run_name=test_run_name, 
+        metrics_chatbot=MAIHEM_TEST_METRICS_CHATBOT, 
+        metrics_persona=MAIHEM_TEST_METRICS_PERSONA
+    )
 
 def getSchoolAIResponse(driver):
     sleep(3)
@@ -61,7 +81,7 @@ def send_message_to_schoolai(driver, msg):
     except WebDriverException as e:
         print(e)
 
-def schoolAIConversation(MAIHEM_PERSONA_ID):
+def schoolAIConversation(test_run_name, maihem_persona_id):
 
     conversation = []
 
@@ -74,7 +94,7 @@ def schoolAIConversation(MAIHEM_PERSONA_ID):
     while len(conversation) < MAIHEM_MAX_MESSAGES:
         msg_bot = getSchoolAIResponse(driver)
         conversation.append(msg_bot)
-        msg_persona = getMaihemResponse(MAIHEM_PERSONA_ID, msg_bot)
+        msg_persona = getMaihemResponse(test_run_name, maihem_persona_id, msg_bot)
         msg_persona_without_bmp = remove_non_bmp_chars(msg_persona)
         send_message_to_schoolai(driver, msg_persona_without_bmp)
         
@@ -91,10 +111,11 @@ def schoolAIConversation(MAIHEM_PERSONA_ID):
     return conversation
 
 # initialize_maihem_test()
-MAIHEM_TEST_RUN_NAME = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+MAIHEM_TEST_RUN_NAME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 for persona_id in range(MAIHEM_TEST_PERSONAS_COUNT):
-    print(">>>>>>SWITCHING MAIHEM PERSONA<<<<<<")
-    conversation = schoolAIConversation(persona_id)
+    print(f">>>>>>MAIHEM PERSONA {persona_id}<<<<<<")
+    conversation = schoolAIConversation(MAIHEM_TEST_RUN_NAME, persona_id)
+evaluate_results(MAIHEM_TEST_RUN_NAME)
 
 # for msg in conversation:
 #   print(msg)
