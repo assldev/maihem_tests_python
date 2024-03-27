@@ -7,13 +7,15 @@ from selenium.common.exceptions import WebDriverException
 from time import sleep
 from datetime import datetime
 
+CURRENT_TIMESTAMP = datetime.now()
+
 os.environ['MAIHEM_API_KEY'] = 'maihem-20240320-cANx30AceO^LclbykXht78W7b3l{5n01'
 MAIHEM_MAX_MESSAGES = 14
 
-MAIHEM_TEST_NAME = "Education Bot Test (3 Personas) - SchoolAI"
+MAIHEM_TEST_NAME = f"[{CURRENT_TIMESTAMP.strftime('%Y-%m-%d')}] Education Bot Test - SchoolAI"
 MAIHEM_TEST_CHATBOT_ROLE = "education tutor"
 MAIHEM_TEST_INDUSTRY = "Education"
-MAIHEM_TEST_PERSONAS_COUNT = 3
+MAIHEM_TEST_PERSONAS_COUNT = 2
 MAIHEM_TEST_TOPIC = "Secondary school"
 MAIHEM_TEST_LANGUAGE = "English"
 MAIHEM_TEST_METRICS_CHATBOT = {
@@ -155,8 +157,8 @@ def schoolAIConversation(test_run_name, maihem_persona_id):
     driver.quit()
     return conversation
 
-# initialize_maihem_test()
-MAIHEM_TEST_RUN_NAME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+initialize_maihem_test()
+MAIHEM_TEST_RUN_NAME = CURRENT_TIMESTAMP.strftime("%H:%M:%S")
 for persona_id in range(MAIHEM_TEST_PERSONAS_COUNT):
     print(f">>>>>>MAIHEM PERSONA {persona_id} for MAIHEM TEST RUN {MAIHEM_TEST_RUN_NAME}<<<<<<")
     conversation = schoolAIConversation(MAIHEM_TEST_RUN_NAME, persona_id)
