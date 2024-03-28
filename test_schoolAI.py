@@ -8,16 +8,19 @@ from time import sleep
 from datetime import datetime
 
 CURRENT_TIMESTAMP = datetime.now()
+DATE_YYYYMMDD = CURRENT_TIMESTAMP.strftime('%Y-%m-%d')
+TIME_HHMMSS = CURRENT_TIMESTAMP.strftime("%H:%M:%S")
 
 os.environ['MAIHEM_API_KEY'] = 'maihem-20240320-cANx30AceO^LclbykXht78W7b3l{5n01'
-MAIHEM_MAX_MESSAGES = 14
+MAIHEM_MAX_MESSAGES = 5
 
-MAIHEM_TEST_NAME = f"[{CURRENT_TIMESTAMP.strftime('%Y-%m-%d')}] Education Bot Test - SchoolAI"
+MAIHEM_TEST_PERSONAS_COUNT = 2
 MAIHEM_TEST_CHATBOT_ROLE = "education tutor"
 MAIHEM_TEST_INDUSTRY = "Education"
-MAIHEM_TEST_PERSONAS_COUNT = 2
 MAIHEM_TEST_TOPIC = "Secondary school"
 MAIHEM_TEST_LANGUAGE = "English"
+MAIHEM_TEST_NAME = f"[{DATE_YYYYMMDD}] SchoolAI - {MAIHEM_TEST_INDUSTRY} (Personas = {MAIHEM_TEST_PERSONAS_COUNT})"
+
 MAIHEM_TEST_METRICS_CHATBOT = {
     "Empathy": "The chatbot was able to understand and empathize with the persona's feelings",
     "Politeness": "The chatbot used polite language and tone to communicate with the persona",
@@ -39,7 +42,6 @@ def initialize_maihem_test():
         topic=MAIHEM_TEST_TOPIC,
         language=MAIHEM_TEST_LANGUAGE
     )
-    print(f"NEW MAIHEM TEST PROFILE CREATED: {MAIHEM_TEST_NAME}")
 
 def getMaihemResponse(test_run_name, persona_id, message):
     msg = maihem.chat_with_persona(
@@ -63,7 +65,6 @@ def evaluate_results(test_run_name):
     )
 
 def getSchoolAIResponse(driver):
-    sleep(3)
     SCHOOLAI_RESPONSE_CSS_SELECTOR = "div.datadog-chat_assistant"  # Adjusted CSS selector
     response_elements = driver.find_elements(By.CSS_SELECTOR, SCHOOLAI_RESPONSE_CSS_SELECTOR)
 
@@ -90,16 +91,6 @@ def getSchoolAIResponse(driver):
         
         print("AI bot: " + msg_bot)
         return msg_bot.strip()
-    # SCHOOLAI_RESPONSE_CSS_SELECTOR = "div.dark\:text-white p"
-    # response_element = driver.find_element(By.CSS_SELECTOR, SCHOOLAI_RESPONSE_CSS_SELECTOR)
-
-    # message = ""
-    # for child in response_element.find_elements(By.TAG_NAME, "p"):
-    #     message += child.text.strip() + "\n"
-
-    # msg_bot_temp = message.strip()
-    # print("AI bot: " + msg_bot_temp)
-    # return msg_bot_temp
 
 def send_message_to_schoolai(driver, msg):
     try:
@@ -118,32 +109,25 @@ def schoolAIConversation(test_run_name, maihem_persona_id):
     driver = webdriver.Chrome()
     driver.get(SCHOOLAI_URL)
     sleep(5)
-    name = test_run_name + str(maihem_persona_id)
+    name = f"Persona {maihem_persona_id} | Test {MAIHEM_TEST_NAME} | Test Run {test_run_name}"
     name_input = driver.find_element(By.ID, "name-input")
     name_input.send_keys(name)
     name_input.send_keys(Keys.ENTER)
     sleep(5)
-    
 
     while True:
-        sleep(8)
         if len(conversation) == MAIHEM_MAX_MESSAGES:
             msg_bot = "END"
-            conversation.append(msg_bot)
-            msg_persona = getMaihemResponse(test_run_name, maihem_persona_id, msg_bot)
-            msg_persona_without_bmp = remove_non_bmp_chars(msg_persona)
-            send_message_to_schoolai(driver, msg_persona_without_bmp)
-            conversation.append(msg_persona)
-            break
         else:
-            # print(">>>" ,len(conversation)+1, "<<<")
             msg_bot = getSchoolAIResponse(driver)
-            conversation.append(msg_bot)
-            msg_persona = getMaihemResponse(test_run_name, maihem_persona_id, msg_bot)
-            msg_persona_without_bmp = remove_non_bmp_chars(msg_persona)
-            send_message_to_schoolai(driver, msg_persona_without_bmp)
-            # print(">>>" ,len(conversation)+1, "<<<")
-            conversation.append(msg_persona)
+            sleep(5)
+
+        conversation.append(msg_bot)
+        msg_persona = getMaihemResponse(test_run_name, maihem_persona_id, msg_bot)
+        # sleep(5)
+        msg_persona_without_bmp = remove_non_bmp_chars(msg_persona)
+        send_message_to_schoolai(driver, msg_persona_without_bmp)
+        conversation.append(msg_persona)
         
         if msg_persona == "Maximum number of conversation turns reached":
             print("CONVERSATION COMPLETED: MAIHEM LIMIT REACHED")
@@ -152,17 +136,24 @@ def schoolAIConversation(test_run_name, maihem_persona_id):
             print("CONVERSATION COMPLETED: SCHOOLAI LIMIT REACHED")
             break
 
-        sleep(3)
-
     driver.quit()
     return conversation
 
-initialize_maihem_test()
-MAIHEM_TEST_RUN_NAME = CURRENT_TIMESTAMP.strftime("%H:%M:%S")
+# INITIALIZE TEST (IF NOT ALREADY EXISTS)
+try:
+    initialize_maihem_test()
+    print(f"NEW MAIHEM TEST PROFILE CREATED: {MAIHEM_TEST_NAME}")
+except Exception as e:
+    print(e)
+
+# RUN TEST
+MAIHEM_TEST_RUN_NAME = TIME_HHMMSS
 for persona_id in range(MAIHEM_TEST_PERSONAS_COUNT):
     print(f">>>>>>MAIHEM PERSONA {persona_id} for MAIHEM TEST RUN {MAIHEM_TEST_RUN_NAME}<<<<<<")
     conversation = schoolAIConversation(MAIHEM_TEST_RUN_NAME, persona_id)
-evaluate_results(MAIHEM_TEST_RUN_NAME)
 
 # for msg in conversation:
 #   print(msg)
+
+# EVALUATE TEST RUN
+evaluate_results(MAIHEM_TEST_RUN_NAME)
