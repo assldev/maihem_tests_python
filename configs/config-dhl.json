@@ -1,0 +1,9 @@
+{
+    "MAIHEM_TEST_CHATBOT_ROLE": "customer support agent",
+    "MAIHEM_TEST_INDUSTRY": "Logistics",
+    "MAIHEM_TEST_TOPIC": "Courier from India",
+    "MAIHEM_TEST_LANGUAGE": "English",
+    "BOT_URL": "https://webtrack.dhlglobalmail.com/support/customer-service",
+    "CSS_SELECTOR_MESSAGE_TB": "[data-test-id='chat-input']",
+    "IFRAME_ID": "dhl-va-widget-iframe"
+}

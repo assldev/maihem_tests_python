@@ -7,6 +7,7 @@ from selenium.common.exceptions import WebDriverException
 from time import sleep
 from datetime import datetime
 from bot_message_extractor import get_msg_extractor_function
+from chatbox_opener import get_open_chatbox_function
 import json
 import sys
 
@@ -28,6 +29,11 @@ MAIHEM_TEST_TOPIC = bot_config["MAIHEM_TEST_TOPIC"]
 MAIHEM_TEST_LANGUAGE = bot_config["MAIHEM_TEST_LANGUAGE"]
 BOT_URL = bot_config["BOT_URL"]
 CSS_SELECTOR_MESSAGE_TB = bot_config["CSS_SELECTOR_MESSAGE_TB"]
+IFRAME_ID = None
+try:
+    IFRAME_ID = bot_config["IFRAME_ID"]
+except KeyError as e:
+    print(f"{e} DOES NOT EXIST")
 
 CURRENT_TIMESTAMP = datetime.now()
 DATE_YYYYMMDD = CURRENT_TIMESTAMP.strftime('%Y-%m-%d')
@@ -79,6 +85,12 @@ try:
 except Exception as e:
     print(e)
 
+open_chatbox = None
+try:
+    open_chatbox = get_open_chatbox_function(bot_company)
+except Exception as e:
+    print(e)
+
 def start_conversation(maihem_persona_id):
 
     conversation = []
@@ -86,7 +98,15 @@ def start_conversation(maihem_persona_id):
     # INIITIALIZE SELENIUM
     driver = webdriver.Chrome()
     driver.get(BOT_URL)
-    sleep(7)
+    sleep(5)
+    if IFRAME_ID != None:
+        driver.switch_to.frame(driver.find_element(By.ID, IFRAME_ID))
+        print("SWITCHING TO IFRAME")
+    # sleep(5)
+
+    if open_chatbox != None:
+        open_chatbox(driver)
+        sleep(5)
 
     while True:
         msg_bot = ""
@@ -95,15 +115,16 @@ def start_conversation(maihem_persona_id):
         else:
             msg_bot = extract_bot_msg(driver)
             # sleep(5)
+        print("-----------------")
         print(f"AI bot: {msg_bot}")
 
         conversation.append(msg_bot)
         msg_persona = get_maihem_response(maihem_persona_id, msg_bot)
-        print(f"Persona response: {msg_persona}")
+        # print(f"Persona response: {msg_persona}")
         # sleep(5)
         msg_persona_without_bmp = remove_non_bmp_chars(msg_persona)
         send_message_to_bot(driver, msg_persona_without_bmp)
-        # sleep(5)
+        sleep(7)
         conversation.append(msg_persona)
         
         if msg_persona == "Maximum number of conversation turns reached":
@@ -116,20 +137,20 @@ def start_conversation(maihem_persona_id):
     driver.quit()
     return conversation
 
-# INITIALIZE TEST (IF NOT ALREADY EXISTS)
-try:
-    initialize_maihem_test()
-    print(f"NEW MAIHEM TEST PROFILE CREATED: {MAIHEM_TEST_NAME}")
-except Exception as e:
-    print(e)
+def main():
+    # INITIALIZE TEST (IF NOT ALREADY EXISTS)
+    try:
+        initialize_maihem_test()
+        print(f"NEW MAIHEM TEST PROFILE CREATED: {MAIHEM_TEST_NAME}")
+    except Exception as e:
+        print(e)
 
-# RUN TEST
-for persona_id in range(MAIHEM_TEST_PERSONAS_COUNT):
-    print(f">>>>>>MAIHEM PERSONA {persona_id} for MAIHEM TEST RUN {MAIHEM_TEST_RUN_NAME}<<<<<<")
-    conversation = start_conversation(persona_id)
+    # RUN TEST
+    for persona_id in range(MAIHEM_TEST_PERSONAS_COUNT):
+        print(f">>>>>>MAIHEM PERSONA {persona_id} for MAIHEM TEST RUN {MAIHEM_TEST_RUN_NAME}<<<<<<")
+        conversation = start_conversation(persona_id)
 
-# for msg in conversation:
-#   print(msg)
+    # EVALUATE TEST RUN
+    # evaluate_results()
 
-# EVALUATE TEST RUN
-evaluate_results()
+main()
