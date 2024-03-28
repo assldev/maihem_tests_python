@@ -1,0 +1,8 @@
+{
+    "MAIHEM_TEST_CHATBOT_ROLE": "education tutor",
+    "MAIHEM_TEST_INDUSTRY": "Education",
+    "MAIHEM_TEST_TOPIC": "Secondary school",
+    "MAIHEM_TEST_LANGUAGE": "English",
+    "BOT_URL": "https://app.schoolai.com/space?code=UE8R",
+    "CSS_SELECTOR_MESSAGE_TB": "#chat-input"
+}

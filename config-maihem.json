@@ -1,0 +1,15 @@
+{
+    "MAIHEM_MAX_MESSAGES": 3,
+    "MAIHEM_TEST_PERSONAS_COUNT": 1,
+    "MAIHEM_TEST_METRICS_CHATBOT": {
+        "Empathy": "The chatbot was able to understand and empathize with the persona's feelings",
+        "Politeness": "The chatbot used polite language and tone to communicate with the persona",
+        "On topic": "The chatbot stayed on topic and anwered the persona's request",
+        "Correct language": "The response of the chatbot was in the correct language"
+    },
+    "MAIHEM_TEST_METRICS_PERSONA": {
+        "Mood improvement": "The persona's mood improved",
+        "Goal completion": "The goal of the persona was achieved",
+        "Frustration avoidance": "The persona was not fustrated"
+    }
+}
